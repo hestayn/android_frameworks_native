@@ -20,6 +20,7 @@
 #include <memory>
 #include <stdint.h>
 #include <sys/types.h>
+#include <atomic>
 
 /*
  * NOTE: Make sure this file doesn't include  anything from <gl/ > or <gl2/ >
@@ -859,6 +860,7 @@ private:
     int mDebugRegion;
     int mDebugDDMS;
     int mDebugDisableHWC;
+    std::atomic<int> mHwcWarmupFrames;
     int mDebugDisableTransformHint;
     volatile nsecs_t mDebugInSwapBuffers;
     nsecs_t mLastSwapBufferTime;

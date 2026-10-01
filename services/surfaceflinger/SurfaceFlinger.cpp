@@ -250,6 +250,7 @@ SurfaceFlinger::SurfaceFlinger(SurfaceFlinger::SkipInitializationTag)
         mDebugRegion(0),
         mDebugDDMS(0),
         mDebugDisableHWC(0),
+        mHwcWarmupFrames(0),
         mDebugDisableTransformHint(0),
         mDebugInSwapBuffers(0),
         mLastSwapBufferTime(0),
@@ -2054,6 +2055,17 @@ void SurfaceFlinger::pickColorMode(const sp<DisplayDevice>& displayDevice,
 void SurfaceFlinger::setUpHWComposer() {
     ATRACE_CALL();
     ALOGV("setUpHWComposer");
+
+    if (mHwcWarmupFrames > 0) {
+        mHwcWarmupFrames--;
+        if (mHwcWarmupFrames == 0) {
+            mDebugDisableHWC = 0;
+            invalidateHwcGeometry();
+            repaintEverything();
+        } else {
+            repaintEverything();
+        }
+    }
 
     for (size_t dpy=0 ; dpy<mDisplays.size() ; dpy++) {
         bool dirty = !mDisplays[dpy]->getDirtyRegion(mRepaintEverything).isEmpty();
@@ -3950,6 +3962,9 @@ void SurfaceFlinger::setPowerModeInternal(const sp<DisplayDevice>& hw,
 
         mVisibleRegionsDirty = true;
         mHasPoweredOff = true;
+        mHwcWarmupFrames = 3;
+        mDebugDisableHWC = 1;
+        invalidateHwcGeometry();
         repaintEverything();
 
         struct sched_param param = {0};
